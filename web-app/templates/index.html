@@ -41,10 +41,18 @@
         .unit-select {
             width: 80px;
         }
+        .header-img {
+            width: 100%;
+            max-height: 200px;
+            object-fit: cover;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
     </style>
 </head>
 <body>
     <div class="container">
+        <img src="{{ url_for('static', filename='header-image.png') }}" alt="Header Image" class="header-img">
         <h1 class="text-center">Recipe Emissions Calculator</h1>
         <p class="text-center">Enter the number of servings and add ingredients by typing in the search box. Suggestions will appear based on the available ingredients. Enter the amount and select the unit (grams or deciliters). You can add up to 15 ingredients. When ready, press "Calculate Emissions" to see the CO₂ emissions per serving.</p>
         
