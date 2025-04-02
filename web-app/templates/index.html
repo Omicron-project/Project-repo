@@ -41,7 +41,7 @@
         .unit-select {
             width: 80px;
         }
-        .header-img {
+        .header-img {  
             width: 100%;
             max-height: 200px;
             object-fit: cover;
@@ -52,7 +52,7 @@
 </head>
 <body>
     <div class="container">
-        <img src="{{ url_for('static', filename='header-image.png') }}" alt="Header Image" class="header-img">
+        <img src="{{ url_for('static', filename='header-image.png') }}" alt="Header Image" class="header-img"> 
         <h1 class="text-center">Recipe Emissions Calculator</h1>
         <p class="text-center">Enter the number of servings and add ingredients by typing in the search box. Suggestions will appear based on the available ingredients. Enter the amount and select the unit (grams or deciliters). You can add up to 15 ingredients. When ready, press "Calculate Emissions" to see the CO₂ emissions per serving.</p>
         
@@ -73,8 +73,8 @@
                     <button type="button" class="btn btn-danger delete-ingredient">X</button>
                 </div>
             </div>
-            <button type="button" id="addIngredient" class="btn btn-secondary">+ Add More</button>
-            <button type="submit" class="btn btn-dark w-100 mt-3">Calculate Emissions</button>
+            <button type="button" id="addIngredient" class="btn" style="display: block; width: auto; background-color: #a6a6a6; color: white; border: none; padding: 10px 20px; border-radius: 5px; margin-bottom: 25px;">+ Add More</button>
+            <button type="submit" class="btn" style="display: block; width: 200px; background-color: #36633a; color: white; border: none; padding: 10px 20px; border-radius: 5px;">Calculate Emissions</button> <!-- modified button --> 
         </form>
         
         <div id="result" class="mt-3 text-center"></div>
