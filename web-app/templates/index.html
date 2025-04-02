@@ -56,7 +56,7 @@
             
             <div id="ingredient-list">
                 <div class="ingredient-row d-flex mb-2">
-                    <input type="text" class="form-control ingredient-search me-2" placeholder="Search for ingredient">
+                    <input type="text" class="form-control ingredient-search me-2" placeholder="Search for ingredient" list="ingredient-datalist">
                     <input type="number" class="form-control ingredient-amount me-2" placeholder="Amount">
                     <select class="form-select unit-select me-2">
                         <option value="gr">gr</option>
@@ -72,24 +72,60 @@
         <div id="result" class="mt-3 text-center"></div>
     </div>
 
+    <datalist id="ingredient-datalist"></datalist>
+
     <script>
         $(document).ready(function () {
             let maxIngredients = 15;
             let count = 1;
             
+            // Function to enable ingredient autocomplete
+            function enableAutocomplete($inputField) {
+                $inputField.attr("list", "ingredient-datalist"); // Attach the datalist to the input
+
+                $inputField.on("input", function () {
+                    let query = $(this).val().trim();
+                    console.log("Searching for:", query); // Debugging log
+
+                    if (query.length < 2) 
+                        return; // searhing inputs longer than 2 letters
+                    
+                    $.ajax({
+                        url: "/search_ingredients",
+                        type: "GET", 
+                        data: { query: query},
+                        success: function(data) {
+                            console.log("Response:", data);  // Debugging log
+                            let suggestions = data.map(item => `<option value="${item}">${item}</option>`).join("");
+                            $("#ingredient-datalist").html(suggestions);
+                        },
+                        error: function (xhr, status, error) {
+                            console.log("AJAX Error:", status, error);  // Debugging log
+                        }
+                    });
+                
+                });
+            }
+
+            // Enable autocomplete for existing input
+            enableAutocomplete($(".ingredient-search"));
             // Adds a new ingredient row when the + button is clicked
             $('#addIngredient').click(function () {
                 if (count < maxIngredients) {
-                    let newRow = `<div class="ingredient-row d-flex mb-2">
-                        <input type="text" class="form-control ingredient-search me-2" placeholder="Search for ingredient">
-                        <input type="number" class="form-control ingredient-amount me-2" placeholder="Amount">
-                        <select class="form-select unit-select me-2">
-                            <option value="gr">gr</option>
-                            <option value="dl">dl</option>
-                        </select>
-                        <button type="button" class="btn btn-danger delete-ingredient">X</button>
-                    </div>`;
+                    let newRow = $(
+                        `<div class="ingredient-row d-flex mb-2">
+                            <input type="text" class="form-control ingredient-search me-2" placeholder="Search for ingredient">
+                            <input type="number" class="form-control ingredient-amount me-2" placeholder="Amount">
+                            <select class="form-select unit-select me-2">
+                                <option value="gr">gr</option>
+                                <option value="dl">dl</option>
+                            </select>
+                            <button type="button" class="btn btn-danger delete-ingredient">X</button>
+                        </div>`
+                    );
+
                     $('#ingredient-list').append(newRow);
+                    enableAutocomplete(newRow.find(".ingredient-search")); // Enable autocomplete for the new input
                     count++;
                 }
             });
@@ -103,9 +139,34 @@
             // Displays result text when the form is submitted
             $('#emissionForm').submit(function (e) {
                 e.preventDefault();
-                $('#result').html(`<h3>Result:</h3><p>CO₂ emissions per serving is X.</p>`);
+                let ingredients = [];
+
+                //Collect ingredient data
+                $('.ingredient-row').each(function () {
+                    let name = $(this).find('.ingredient-search').val();
+                    let amount = $(this).find('.ingredient-amount').val();
+                    let unit = $(this).find('.unit-select').val();
+                    if (name && amount) {
+                        ingredients.push({ name: name, amount: parseFloat(amount), unit: unit });
+                    }
+            });
+
+            // Send data to Flask for emissions calculation
+            $.ajax({
+                url:"/calculate_emissions", // Flask route for calculating
+                type: "POST",
+                contentType: "application/json",
+                data: JSON.stringify({ ingredients:ingredients }),
+                success: function(data) {
+                    let emissionsPerServing = data.emissons_per_serving;
+                    $('#result').html(`<h3>Result:</h3><p>CO₂ emissions per serving is ${emissionsPerServing} kg.</p>`);
+                },
+                error: function (xhr, status, error) {
+                    console.log("AJAX error:", status, error)
+                }    
             });
         });
+    });
     </script>
 </body>
 </html>
