@@ -39,34 +39,61 @@ def search_ingredients():
 
 @app.route("/calculate_emissions", methods=["POST"]) 
 def calculate_emissions():
+    data = request.json
+    ingredients = data.get("ingredients", [])
+        
+    total_emissions = 0.0 
+    results = [] # Store individual ingredient details
+
+    conn = get_db_connection()
+    cur = conn.cursor()
+
     try: 
-        data = request.json
-        ingredients = data.get("ingredients", [])
-        results = []
-
-        conn = get_db_connection()
-        cur = conn.cursor()
-
         for ingredient in ingredients:
-            name = ingredient.get("name")
+            name = ingredient["name"]
+            amount = float(ingredient["amount"])
+            unit = ingredient["unit"]
                 
             # Fetch carbon_fb value from the database
             cur.execute("SELECT carbon_mean FROM webappdb.ingredients WHERE food_name = %s;", (name,))
-            row = cur.fetchone()
+            emission_factor_row = cur.fetchone()
                 
-            if row:
-                results.append({"name": name, "carbon_fb": float(row[0])})  # Convert Decimal to float
+            if emission_factor_row:
+                emission_factor = float(emission_factor_row[0])  # Convert Decimal to float
+
+                # Convert emissions based on the unit
+                if unit == 'gr':
+                    emissions = (emission_factor * amount/1000) # Convert grams to kg
+                elif unit == 'dl':
+                    emissions = emission_factor * amount # Assume 1 dl = 1 kg (adjust if needed)
+                else:
+                    emissions = 0 
+                
+                total_emissions += emissions # Add to total emissions
+
+                # Store ingredient details
+                results.append({
+                    "name": name,
+                    "amount": amount,
+                    "unit": unit,
+                    "carbon_fb": emission_factor,
+                    "emissions": emissions # Store individual emissions
+                })
             else:
-                results.append({"name": name, "carbon_fb": "Not Found"})  # Handle missing ingredients        
-
-        cur.close()
-        conn.close()
-
-        return jsonify(results)
+                print(f"Warning: No emission factor found for ingredient {name}")
 
     except Exception as e: 
         print("Error:", e)
         return jsonify({"error": "Something went wrong"}), 500 
+
+    finally: 
+        cur.close()
+        conn.close()
+
+    return jsonify({
+        "ingredient_details": results,
+        "total_emissions": total_emissions  # Send total emissions to frontend
+    })
 
 if __name__ == "__main__":
     app.run(debug=True)

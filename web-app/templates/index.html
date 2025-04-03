@@ -151,8 +151,10 @@
 
                 $(".ingredient-row").each(function () {
                     let name = $(this).find(".ingredient-search").val();
-                    if (name) {
-                        ingredients.push({ name: name }); // Only send name
+                    let amount = $(this).find(".ingredient-amount").val();
+                    let unit = $(this).find(".unit-select").val();
+                    if (name && amount) {
+                        ingredients.push({name:name, amount: parseFloat(amount), unit:unit});
                     }
                 });
 
@@ -164,10 +166,14 @@
                 data: JSON.stringify({ ingredients: ingredients }),
                 success: function(data) {
                     let resultHtml = "<h3>Results:</h3><ul>";
-                    data.forEach(item => {
-                        resultHtml += `<li>${item.name}: ${item.carbon_fb} kg CO₂e</li>`;
+
+                    data.ingredient_details.forEach(item => {
+                        resultHtml += `<li>${item.name}: ${item.amount} ${item.unit}, Emissions: ${item.emissions.toFixed(3)} kg CO₂e</li>`;
                     });
+
                     resultHtml += "</ul>";
+                    resultHtml += `<h3>Total Emissions:</h3><p><strong>${data.total_emissions.toFixed(3)} kg CO₂e</strong></p>`;
+
                     $("#result").html(resultHtml);
                 },
                 error: function (xhr, status, error) {
