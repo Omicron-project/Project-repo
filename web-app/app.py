@@ -6,7 +6,7 @@ app = Flask(__name__)
 def get_db_connection():
     return psycopg2.connect(
         host="shared-server.postgres.database.azure.com",
-        database="postgres",
+        database="Emissions_calculator",
         user="omicronadmin",
         password="DBsalasana!"
     )
@@ -37,38 +37,36 @@ def search_ingredients():
 
     return jsonify(ingredients)
 
-@app.route("/calculate_emissions", methods=["POST"]) ## EI TOIMI
+@app.route("/calculate_emissions", methods=["POST"]) 
 def calculate_emissions():
-    data = request.json['ingredients']
-    ingredients = data.get('ingredients', []) 
-    total_emissions = 0.0 
+    try: 
+        data = request.json
+        ingredients = data.get("ingredients", [])
+        results = []
 
-    conn = get_db_connection()
-    cur = conn.cursor()
+        conn = get_db_connection()
+        cur = conn.cursor()
 
-    for ingredient in ingredients:
-        name = ingredient.get('name')
-        amount = ingredient.get('amount')
-        unit = ingredient.get('unit')
+        for ingredient in ingredients:
+            name = ingredient.get("name")
+                
+            # Fetch carbon_fb value from the database
+            cur.execute("SELECT carbon_mean FROM webappdb.ingredients WHERE food_name = %s;", (name,))
+            row = cur.fetchone()
+                
+            if row:
+                results.append({"name": name, "carbon_fb": float(row[0])})  # Convert Decimal to float
+            else:
+                results.append({"name": name, "carbon_fb": "Not Found"})  # Handle missing ingredients        
 
-        # Fetch carbon footprint value from DB
-        cur.execute("SELECT carbon_fb FROM webappdb.ingredients WHERE food_name = %s;", (name,))
-        row = cur.fetchone()
-    
-        if row:
-            emission_factor = float(row[0])
-            # Adjust the logic based on the unit
-            if unit == 'gr':
-                total_emissions += float(emission_factor) * amount / 1000  # Convert grams to kg for emissions
-            elif unit == 'dl':
-                total_emissions += float(emission_factor) * amount  # Assume deciliters are directly used
-        else:
-            print(f"Warning: No emission factor found for ingredient {name}")
-    
-    cur.close()
-    conn.close()
-    
-    return jsonify({"emissions_per_serving": total_emissions})
+        cur.close()
+        conn.close()
+
+        return jsonify(results)
+
+    except Exception as e: 
+        print("Error:", e)
+        return jsonify({"error": "Something went wrong"}), 500 
 
 if __name__ == "__main__":
     app.run(debug=True)

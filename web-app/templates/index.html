@@ -59,7 +59,7 @@
         <form id="emissionForm">
             <div class="servings-container">
                 <label for="servings">Number of servings:</label>
-                <input type="number" id="servings" class="form-control" value="0" min="1">
+                <input type="number" id="servings" class="form-control" value="1" min="1">
             </div>
             
             <div id="ingredient-list">
@@ -145,29 +145,30 @@
             });
             
             // Displays result text when the form is submitted
-            $('#emissionForm').submit(function (e) {
+            $("#emissionForm").submit(function (e) {
                 e.preventDefault();
                 let ingredients = [];
 
-                //Collect ingredient data
-                $('.ingredient-row').each(function () {
-                    let name = $(this).find('.ingredient-search').val();
-                    let amount = $(this).find('.ingredient-amount').val();
-                    let unit = $(this).find('.unit-select').val();
-                    if (name && amount) {
-                        ingredients.push({ name: name, amount: parseFloat(amount), unit: unit });
+                $(".ingredient-row").each(function () {
+                    let name = $(this).find(".ingredient-search").val();
+                    if (name) {
+                        ingredients.push({ name: name }); // Only send name
                     }
-            });
+                });
 
             // Send data to Flask for emissions calculation
             $.ajax({
-                url:"/calculate_emissions", // Flask route for calculating
+                url:"/calculate_emissions", // Flask route 
                 type: "POST",
                 contentType: "application/json",
-                data: JSON.stringify({ ingredients:ingredients }),
+                data: JSON.stringify({ ingredients: ingredients }),
                 success: function(data) {
-                    let emissionsPerServing = data.emissons_per_serving;
-                    $('#result').html(`<h3>Result:</h3><p>CO₂ emissions per serving is ${emissionsPerServing} kg.</p>`);
+                    let resultHtml = "<h3>Results:</h3><ul>";
+                    data.forEach(item => {
+                        resultHtml += `<li>${item.name}: ${item.carbon_fb} kg CO₂e</li>`;
+                    });
+                    resultHtml += "</ul>";
+                    $("#result").html(resultHtml);
                 },
                 error: function (xhr, status, error) {
                     console.log("AJAX error:", status, error)
