@@ -1,15 +1,26 @@
 from flask import Flask, render_template, request, jsonify
 import psycopg2
+import os
+from dotenv import load_dotenv
 
 app = Flask(__name__)
 
+load_dotenv() # Load environment variables from .env file if it exists
+
+# Retrieve the database credentials from environment variables
+DB_HOST = os.getenv("DB_HOST")
+DB_NAME = os.getenv("DB_NAME")
+DB_USER = os.getenv("DB_USER")
+DB_PASSWORD = os.getenv("DB_PASSWORD")
+
 def get_db_connection():
-    return psycopg2.connect(
-        host="shared-server.postgres.database.azure.com",
-        database="Emissions_calculator",
-        user="omicronadmin",
-        password="DBsalasana!"
+    conn = psycopg2.connect(
+        host=DB_HOST,
+        dbname=DB_NAME,
+        user=DB_USER,
+        password=DB_PASSWORD
     )
+    return conn
 
 @app.route("/")
 def home():
