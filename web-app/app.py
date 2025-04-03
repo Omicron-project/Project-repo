@@ -41,6 +41,7 @@ def search_ingredients():
 def calculate_emissions():
     data = request.json
     ingredients = data.get("ingredients", [])
+    servings = int(data.get("servings", 1))  # Default to 1 serving if not provided
         
     total_emissions = 0.0 
     results = [] # Store individual ingredient details
@@ -65,7 +66,7 @@ def calculate_emissions():
                 if unit == 'gr':
                     emissions = (emission_factor * amount/1000) # Convert grams to kg
                 elif unit == 'dl':
-                    emissions = emission_factor * amount # Assume 1 dl = 1 kg (adjust if needed)
+                    emissions = (emission_factor * amount/10) 
                 else:
                     emissions = 0 
                 
@@ -81,6 +82,9 @@ def calculate_emissions():
                 })
             else:
                 print(f"Warning: No emission factor found for ingredient {name}")
+        
+        #Calculate per-serving emissions
+        emissions_per_serving = total_emissions / servings if servings > 0 else total_emissions
 
     except Exception as e: 
         print("Error:", e)
@@ -92,7 +96,8 @@ def calculate_emissions():
 
     return jsonify({
         "ingredient_details": results,
-        "total_emissions": total_emissions  # Send total emissions to frontend
+        "total_emissions": total_emissions,  # Send total emissions to frontend
+        "emissions_per_serving": emissions_per_serving # Send emissions per serving
     })
 
 if __name__ == "__main__":

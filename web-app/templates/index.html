@@ -148,6 +148,7 @@
             $("#emissionForm").submit(function (e) {
                 e.preventDefault();
                 let ingredients = [];
+                let servings = $("#servings").val(); // added getting servings value
 
                 $(".ingredient-row").each(function () {
                     let name = $(this).find(".ingredient-search").val();
@@ -163,7 +164,10 @@
                 url:"/calculate_emissions", // Flask route 
                 type: "POST",
                 contentType: "application/json",
-                data: JSON.stringify({ ingredients: ingredients }),
+                data: JSON.stringify({ 
+                    ingredients: ingredients,
+                    servings: servings // Add servings to the request payload
+                }),
                 success: function(data) {
                     let resultHtml = "<h3>Results:</h3><ul>";
 
@@ -173,6 +177,7 @@
 
                     resultHtml += "</ul>";
                     resultHtml += `<h3>Total Emissions:</h3><p><strong>${data.total_emissions.toFixed(3)} kg CO₂e</strong></p>`;
+                    resultHtml += `<p>CO₂e emissions per serving: ${data.emissions_per_serving.toFixed(3)} kg</p>`;
 
                     $("#result").html(resultHtml);
                 },
