@@ -170,7 +170,17 @@
                 }),
                 success: function(data) {
                     let resultHtml = "<h3>Results:</h3><ul>";
-
+                    resultHtml += `
+                        <table class = "table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Ingredient</th>
+                                    <th>Emissions (Kg CO₂e)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                    `;
+                  
                     resultHtml += "</ul>";
                     resultHtml += `<p>${data.total_emissions.toFixed(3)} kg CO₂e per recipe</p>`;
                     resultHtml += `<p>${data.emissions_per_serving.toFixed(3)} kg CO₂e per serving</p>`;
@@ -178,7 +188,6 @@
                                     alt="${data.impact_category}" 
                                     style="max-width: 500px; margin-top: 20px; margin-bottom: 20px">
                                 `;
-
 
                     resultHtml += `
                         <table class = "table table-striped">
