@@ -5,14 +5,16 @@ from dotenv import load_dotenv
 
 app = Flask(__name__)
 
-load_dotenv() # Load environment variables from .env file if it exists
+# Load .env file for database credentials
+load_dotenv()
 
-# Retrieve the database credentials from environment variables
+# Get environment variables
 DB_HOST = os.getenv("DB_HOST")
 DB_NAME = os.getenv("DB_NAME")
 DB_USER = os.getenv("DB_USER")
 DB_PASSWORD = os.getenv("DB_PASSWORD")
 
+# Connect to PostgreSQL
 def get_db_connection():
     conn = psycopg2.connect(
         host=DB_HOST,
@@ -22,17 +24,19 @@ def get_db_connection():
     )
     return conn
 
+# Home page route
 @app.route("/")
 def home():
     return render_template("index.html")
 
-@app.route("/search_ingredients", methods =["GET"])
+# Ingredient search route
+@app.route("/search_ingredients", methods=["GET"])
 def search_ingredients():
     query = request.args.get("query", "").strip()
 
     if not query:
-        return jsonify([]) #return empty list if query is empty
-    
+        return jsonify([])
+
     conn = get_db_connection()
     cur = conn.cursor()
 
@@ -40,7 +44,6 @@ def search_ingredients():
         "SELECT food_name FROM webappdb.ingredients WHERE food_name ILIKE %s LIMIT 10;",
         (f"%{query}%",)
     )
-
     ingredients = [row[0] for row in cur.fetchall()]
 
     cur.close()
@@ -48,68 +51,93 @@ def search_ingredients():
 
     return jsonify(ingredients)
 
-@app.route("/calculate_emissions", methods=["POST"]) 
+# Classify emissions per serving
+def categorize_impact(emissions_per_serving):
+    if emissions_per_serving < 1.75:
+        return "Very Low Impact"
+    elif 1.75 <= emissions_per_serving < 3:
+        return "Low Impact"
+    elif 3 <= emissions_per_serving < 4.25:
+        return "Medium Impact"
+    elif 4.25 <= emissions_per_serving < 5.5:
+        return "High Impact"
+    else:
+        return "Very High Impact"
+
+# Emissions calculation route
+@app.route("/calculate_emissions", methods=["POST"])
 def calculate_emissions():
     data = request.json
     ingredients = data.get("ingredients", [])
-    servings = int(data.get("servings", 1))  # Default to 1 serving if not provided
-        
-    total_emissions = 0.0 
-    results = [] # Store individual ingredient details
+    servings = int(data.get("servings", 1))
+
+    total_emissions = 0.0
+    results = []
 
     conn = get_db_connection()
     cur = conn.cursor()
 
-    try: 
+    try:
         for ingredient in ingredients:
             name = ingredient["name"]
             amount = float(ingredient["amount"])
             unit = ingredient["unit"]
-                
-            # Fetch carbon_fb value from the database
+
             cur.execute("SELECT carbon_mean FROM webappdb.ingredients WHERE food_name = %s;", (name,))
             emission_factor_row = cur.fetchone()
-                
+
             if emission_factor_row:
-                emission_factor = float(emission_factor_row[0])  # Convert Decimal to float
+                emission_factor = float(emission_factor_row[0])
 
-                # Convert emissions based on the unit
+                # Convert units
                 if unit == 'gr':
-                    emissions = (emission_factor * amount/1000) # Convert grams to kg
+                    emissions = (emission_factor * amount / 1000)
                 elif unit == 'dl':
-                    emissions = (emission_factor * amount/10) 
+                    emissions = (emission_factor * amount / 10)
                 else:
-                    emissions = 0 
-                
-                total_emissions += emissions # Add to total emissions
+                    emissions = 0  # default to 0 if unit not handled
 
-                # Store ingredient details
+                total_emissions += emissions
+
                 results.append({
                     "name": name,
                     "amount": amount,
                     "unit": unit,
                     "carbon_fb": emission_factor,
-                    "emissions": emissions # Store individual emissions
+                    "emissions": emissions
                 })
             else:
                 print(f"Warning: No emission factor found for ingredient {name}")
-        
-        #Calculate per-serving emissions
+
         emissions_per_serving = total_emissions / servings if servings > 0 else total_emissions
+        impact_category = categorize_impact(emissions_per_serving)
 
-    except Exception as e: 
+        # Select image based on impact category
+        image_map = {
+            "Very Low Impact": "super_low.png",
+            "Low Impact": "low.png",
+            "Medium Impact": "medium.png",
+            "High Impact": "high.png",
+            "Very High Impact": "very_high.png"
+        }
+        impact_image = image_map.get(impact_category, "default.png")
+
+        return jsonify({
+            "total_emissions": round(total_emissions, 2),
+            "emissions_per_serving": round(emissions_per_serving, 2),
+            "impact_category": impact_category,
+            "impact_image": impact_image,
+            "ingredient_details": results
+        })
+
+    except Exception as e:
         print("Error:", e)
-        return jsonify({"error": "Something went wrong"}), 500 
+        return jsonify({"error": "Something went wrong"}), 500
 
-    finally: 
+    finally:
         cur.close()
         conn.close()
 
-    return jsonify({
-        "ingredient_details": results,
-        "total_emissions": total_emissions,  # Send total emissions to frontend
-        "emissions_per_serving": emissions_per_serving # Send emissions per serving
-    })
-
+# Run Flask app
 if __name__ == "__main__":
     app.run(debug=True)
