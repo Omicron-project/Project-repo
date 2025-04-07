@@ -170,14 +170,33 @@
                 }),
                 success: function(data) {
                     let resultHtml = "<h3>Results:</h3><ul>";
+                    resultHtml += `
+                        <table class = "table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Ingredient</th>
+                                    <th>Emissions (Kg CO₂e)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                    `;
 
                     data.ingredient_details.forEach(item => {
-                        resultHtml += `<li>${item.name}: ${item.amount} ${item.unit}, Emissions: ${item.emissions.toFixed(3)} kg CO₂e</li>`;
+                        resultHtml += `
+                            <tr>
+                                <td>${item.name}</td> 
+                                <td>${item.emissions.toFixed(3)} </td>
+                            </tr>
+                        `;
                     });
 
-                    resultHtml += "</ul>";
-                    resultHtml += `<h3>Total Emissions:</h3><p><strong>${data.total_emissions.toFixed(3)} kg CO₂e</strong></p>`;
-                    resultHtml += `<p>CO₂e emissions per serving: ${data.emissions_per_serving.toFixed(3)} kg</p>`;
+                    resultHtml += `
+                        </tbody>
+                    </table>
+                    <h4>Total Emissions:</h4>
+                    <p><strong>${data.total_emissions.toFixed(3)} kg CO₂e</strong></p>
+                    <p>CO₂e emissions per serving: <strong>${data.emissions_per_serving.toFixed(3)} kg</strong></p>
+                `;
 
                     $("#result").html(resultHtml);
                 },
