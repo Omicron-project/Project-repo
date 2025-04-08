@@ -10,6 +10,10 @@ on:
       - main
   workflow_dispatch:
 
+env:
+  AZURE_WEBAPP_NAME: app.py # Set this to your application's name
+  AZURE_WEBAPP_PACKAGE_PATH: 'web-app/app.py' # Set this to the path to your web app project, defaults to the repository roo
+
 jobs:
   build:
     runs-on: ubuntu-latest
