@@ -11,8 +11,8 @@ on:
   workflow_dispatch:
 
 env:
-  AZURE_WEBAPP_NAME: app.py # Set this to your application's name
-  AZURE_WEBAPP_PACKAGE_PATH: 'web-app/app.py' # Set this to the path to your web app project, defaults to the repository roo
+  AZURE_WEBAPP_NAME: app # Set this to your application's name
+  AZURE_WEBAPP_PACKAGE_PATH: 'web-app' # Set this to the path to your web app project, defaults to the repository roo
 
 jobs:
   build:
