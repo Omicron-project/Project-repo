@@ -122,8 +122,8 @@
                 if (count < maxIngredients) {
                     let newRow = $(
                         `<div class="ingredient-row d-flex mb-2">
-                            <input type="text" class="form-control ingredient-search me-2" placeholder="Search for ingredient">
-                            <input type="number" class="form-control ingredient-amount me-2" placeholder="Amount" min="0.01" step="any">
+                            <input type="text" class="form-control ingredient-search me-2" placeholder="Search for ingredient" required>
+                            <input type="number" class="form-control ingredient-amount me-2" placeholder="Amount" min="0.01" step="any" required>
                             <select class="form-select unit-select me-2">
                                 <option value="gr">gr</option>
                                 <option value="dl">dl</option>
