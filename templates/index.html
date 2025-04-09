@@ -48,12 +48,15 @@
             border-radius: 10px;
             margin-bottom: 20px;
         }
+        .spaced-title {
+        margin-bottom: 30px;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <img src="{{ url_for('static', filename='header-image.png') }}" alt="Header Image" class="header-img"> 
-        <h1 class="text-center">Recipe Emissions Calculator</h1>
+        <h1 class="text-center spaced-title">Recipe Emissions Calculator</h1>
         <p class="text-center">Enter the number of servings and add ingredients by typing in the search box. Suggestions will appear based on the available ingredients. Enter the amount and select the unit (grams or deciliters). You can add up to 15 ingredients. <a href="https://app.powerbi.com/groups/me/apps/8cfaa28a-ee2b-4adc-8983-5d6553c0adbc/reports/934cdd21-3e9e-42e9-b144-1509bdde7d54/67ff4e7c35c8d48c7dc9?ctid=aa26dc99-35aa-47ee-b1f5-d892b9d8f2e2&experience=power-bi" target="_blank">Click here</a> for more information and explore the database.</p>
         
         <form id="emissionForm">
@@ -169,7 +172,7 @@
                     servings: servings // Add servings to the request payload
                 }),
                 success: function(data) {
-                    let resultHtml = "<h3>Results:</h3><ul>";
+                    let resultHtml = '<h3 style="margin-bottom: 20px;">Results:</h3><ul>';
                     resultHtml += `
                         <table class = "table table-striped">
                             <thead>
