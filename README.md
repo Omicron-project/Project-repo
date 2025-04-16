@@ -17,6 +17,5 @@ This project was developed during the final sprint of our Data Engineer Academy.
 ## 🚀 Features  
 - Input recipe ingredients and servings manually  
 - Calculates total emissions and emissions per serving  
-- Result gives the carbon footprint (CO2e) for the recipe and per serving
-- Supports predefined ingredient dataset (e.g. thousands of items)  
-- Designed to be extended with scraping or smart parsing later  
+- Result gives the carbon footprint (CO2e) for the recipe, per serving and per ingredient
+- Supports predefined ingredient dataset 
